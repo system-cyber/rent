@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Car - Admin{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 720px; margin: 2rem auto; padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+        <h2>{{ action }} Car</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
+
+    <form method="POST">
+        <!-- Car Name & Quantity -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="name">Car Name</label>
+                <input type="text" id="name" name="name" class="form-control"
+                       value="{{ car.name if car else '' }}" placeholder="e.g. Innova" required>
+            </div>
+            <div class="form-group">
+                <label for="quantity">Quantity</label>
+                <input type="number" id="quantity" name="quantity" class="form-control"
+                       value="{{ car.quantity if car else 1 }}" min="1" required>
+            </div>
+        </div>
+
+        <!-- Rates -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="daily_rate">Daily Rate (&#8377;)</label>
+                <input type="number" id="daily_rate" name="daily_rate" class="form-control"
+                       value="{{ car.daily_rate if car else '' }}" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="monthly_rate">Monthly Rate (&#8377;)</label>
+                <input type="number" id="monthly_rate" name="monthly_rate" class="form-control"
+                       value="{{ car.monthly_rate if car else '' }}" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="extra_km_rate">Extra km Rate (&#8377;)</label>
+                <input type="number" id="extra_km_rate" name="extra_km_rate" class="form-control"
+                       value="{{ car.extra_km_rate if car else '' }}" min="0" required>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+            <label for="description">Description (one-line write-up)</label>
+            <textarea id="description" name="description" class="form-control" rows="2"
+                      placeholder="Short description about the car...">{{ car.description if car else '' }}</textarea>
+        </div>
+
+        <!-- ── 4 Car Images ──────────────────────────────────────────────── -->
+        <div style="background: var(--bg-color); border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem;">
+            <h3 style="margin-bottom: 1rem; font-size: 1rem;">Car Photos (4 sides)</h3>
+            <small style="color:#888; display:block; margin-bottom: 1rem;">
+                Place image files in <code>static/images/</code> then enter the filename below.
+            </small>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <!-- Front -->
+                <div class="form-group">
+                    <label for="image_front">&#128663; Front View</label>
+                    <input type="text" id="image_front" name="image_front" class="form-control"
+                           value="{{ car.image_front if car and car.image_front else '' }}"
+                           placeholder="e.g. innova_front.jpg">
+                    {% if car and car.image_front %}
+                    <img src="{{ url_for('static', filename='images/' + car.image_front) }}"
+                         style="width:100%; height:110px; object-fit:cover; border-radius:4px; margin-top:0.5rem;"
+                         onerror="this.style.display='none'">
+                    {% endif %}
+                </div>
+                <!-- Back -->
+                <div class="form-group">
+                    <label for="image_back">&#128663; Back View</label>
+                    <input type="text" id="image_back" name="image_back" class="form-control"
+                           value="{{ car.image_back if car and car.image_back else '' }}"
+                           placeholder="e.g. innova_back.jpg">
+                    {% if car and car.image_back %}
+                    <img src="{{ url_for('static', filename='images/' + car.image_back) }}"
+                         style="width:100%; height:110px; object-fit:cover; border-radius:4px; margin-top:0.5rem;"
+                         onerror="this.style.display='none'">
+                    {% endif %}
+                </div>
+                <!-- Right -->
+                <div class="form-group">
+                    <label for="image_right">&#129044; Right Side View</label>
+                    <input type="text" id="image_right" name="image_right" class="form-control"
+                           value="{{ car.image_right if car and car.image_right else '' }}"
+                           placeholder="e.g. innova_right.jpg">
+                    {% if car and car.image_right %}
+                    <img src="{{ url_for('static', filename='images/' + car.image_right) }}"
+                         style="width:100%; height:110px; object-fit:cover; border-radius:4px; margin-top:0.5rem;"
+                         onerror="this.style.display='none'">
+                    {% endif %}
+                </div>
+                <!-- Left -->
+                <div class="form-group">
+                    <label for="image_left">&#129043; Left Side View</label>
+                    <input type="text" id="image_left" name="image_left" class="form-control"
+                           value="{{ car.image_left if car and car.image_left else '' }}"
+                           placeholder="e.g. innova_left.jpg">
+                    {% if car and car.image_left %}
+                    <img src="{{ url_for('static', filename='images/' + car.image_left) }}"
+                         style="width:100%; height:110px; object-fit:cover; border-radius:4px; margin-top:0.5rem;"
+                         onerror="this.style.display='none'">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- ─────────────────────────────────────────────────────────────── -->
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 0.5rem;">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">{{ action }} Car</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

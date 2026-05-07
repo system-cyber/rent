@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Login - Pablo's Rentals{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 400px; margin: 4rem auto; padding: 2rem;">
+    <h2 style="text-align: center; margin-bottom: 1.5rem;">Login</h2>
+    <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Login</button>
+    </form>
+    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem;">
+        Don't have an account? <a href="{{ url_for('register') }}">Register here</a>
+    </p>
+</div>
+{% endblock %}

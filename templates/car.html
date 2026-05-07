@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}{{ car.name }} - Pablo's Rentals{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 860px; margin: 0 auto; padding: 2rem;">
+    <h1 style="text-align: center; margin-bottom: 0.5rem;">{{ car.name }}</h1>
+    <p style="text-align: center; font-size: 1.05rem; color: #555; margin-bottom: 2rem;">{{ car.description }}</p>
+
+    <!-- 4-side image grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+        {% set sides = [
+            ('Front',  car.image_front or car.image1),
+            ('Back',   car.image_back  or car.image2),
+            ('Right',  car.image_right or car.image1),
+            ('Left',   car.image_left  or car.image2)
+        ] %}
+        {% for label, img in sides %}
+        <div>
+            <p style="font-size: 0.8rem; font-weight: 600; color: var(--primary-color);
+                      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">
+                {{ label }} View
+            </p>
+            <img src="{{ url_for('static', filename='images/' + img) if img else '' }}"
+                 alt="{{ car.name }} {{ label }} view"
+                 style="width: 100%; height: 220px; object-fit: cover; border-radius: 8px;
+                        border: 1px solid var(--border-color);"
+                 onerror="this.src='https://via.placeholder.com/400x220?text={{ label }}+View'">
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pricing -->
+    <div style="background-color: var(--bg-color); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1rem;">Pricing Details</h3>
+        <ul style="list-style: none; padding: 0;">
+            <li style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                <strong>Daily Rate:</strong> <span>&#8377;{{ car.daily_rate }}</span>
+            </li>
+            <li style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                <strong>Monthly Rate (30 Days):</strong> <span>&#8377;{{ car.monthly_rate }}</span>
+            </li>
+            <li style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                <strong>Extra Km Rate:</strong> <span>&#8377;{{ car.extra_km_rate }}/km</span>
+            </li>
+        </ul>
+        <p style="font-size: 0.85rem; color: #777; margin-top: 1rem;">
+            * Bookings over 15 days are calculated using the prorated monthly rate.
+        </p>
+    </div>
+
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{{ url_for('index') }}" class="btn btn-outline">Back to Fleet</a>
+        <a href="https://wa.me/917025328233?text=Hi, I am enquiring about the {{ car.name }}."
+           target="_blank" class="btn"
+           style="background-color: #25D366; color: white; border: none;">Enquiry via WhatsApp</a>
+        <a href="{{ url_for('book', car_id=car.id) }}" class="btn btn-primary">Book Now</a>
+    </div>
+</div>
+{% endblock %}

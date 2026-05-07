@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Home - Pablo's Rentals{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 3rem 0;">
+    <h1 style="font-size: 3rem; color: var(--primary-color);">Pablo's Rentals</h1>
+    <p style="font-size: 1.2rem; color: #666; max-width: 600px; margin: 0 auto;">
+        Providing premium car rental services since 2022. Experience the freedom of the road with our well-maintained fleet and exceptional service.
+    </p>
+</div>
+
+<div class="services-section">
+    <h2>Our Services</h2>
+    <div class="services-grid">
+        <div class="service-item">
+            <div class="service-icon">✈️</div>
+            <h3>Airport Drop & Pickup</h3>
+            <p>Hassle-free transfers to and from the airport.</p>
+        </div>
+        <div class="service-item">
+            <div class="service-icon">📍</div>
+            <h3>Site Delivery</h3>
+            <p>We deliver your chosen car right to your doorstep.</p>
+        </div>
+        <div class="service-item">
+            <div class="service-icon">⏱️</div>
+            <h3>Sharp Timing</h3>
+            <p>Punctuality is our promise. We value your time.</p>
+        </div>
+        <div class="service-item">
+            <div class="service-icon">✨</div>
+            <h3>Neat & Clean Cars</h3>
+            <p>Sanitized and spotless vehicles for a comfortable ride.</p>
+        </div>
+    </div>
+</div>
+
+<h2 style="margin-top: 3rem; margin-bottom: 1.5rem; text-align: center;">Our Fleet</h2>
+<div class="grid">
+    {% for car in cars %}
+    <div class="card car-card">
+        <img src="{{ url_for('static', filename='images/' + car.image1) }}" alt="{{ car.name }}" class="car-image" onerror="this.src='https://via.placeholder.com/400x200?text=Car+Image'">
+        <div style="flex-grow: 1;">
+            <h3>{{ car.name }}</h3>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">{{ car.description }}</p>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-weight: 500;">
+                <span>Daily Rate:</span>
+                <span>₹{{ car.daily_rate }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; color: #666; font-size: 0.9rem;">
+                <span>Monthly Rate (30 Days):</span>
+                <span>₹{{ car.monthly_rate }}</span>
+            </div>
+        </div>
+        <a href="{{ url_for('car_details', car_id=car.id) }}" class="btn btn-outline" style="display: block; margin-bottom: 0.5rem;">View Details</a>
+        <a href="{{ url_for('book', car_id=car.id) }}" class="btn btn-primary" style="display: block;">Book Now</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

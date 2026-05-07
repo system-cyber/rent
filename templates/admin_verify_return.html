@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% block title %}Verify Return - Booking #{{ booking.id }} - Admin{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 850px; margin: 2rem auto; padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center;
+                margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+        <h2>&#128663; Car Return Verification</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">&larr; Back</a>
+    </div>
+
+    <!-- Booking Summary -->
+    <div style="background: var(--bg-color); border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; font-size: 0.95rem;">
+            <p><strong>Booking ID:</strong> #{{ booking.id }}</p>
+            <p><strong>Car:</strong> {{ booking.car_name }}</p>
+            <p><strong>Customer:</strong> {{ booking.user_name }}</p>
+            <p><strong>Phone:</strong> {{ booking.user_phone }}</p>
+            <p><strong>Original Total:</strong> &#8377;{{ booking.total_amount }}</p>
+        </div>
+
+        <!-- Editable Dates -->
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+            <p style="font-size: 0.85rem; color: #e67e22; font-weight: 600; margin-bottom: 0.5rem;">&#9998; Edit dates below if the rental was extended</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; align-items: end;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="pickup_date" style="font-size: 0.85rem;">Pickup Date</label>
+                    <input type="date" id="pickup_date" name="pickup_date" class="form-control"
+                           value="{{ booking.pickup_date }}" onchange="calcAll()">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="drop_date" style="font-size: 0.85rem;">Drop Date</label>
+                    <input type="date" id="drop_date" name="drop_date" class="form-control"
+                           value="{{ booking.drop_date }}" onchange="calcAll()">
+                </div>
+                <div style="text-align: center;">
+                    <span style="font-size: 0.75rem; color: #666; text-transform: uppercase;">Days Used</span>
+                    <p id="disp_days_top" style="font-size: 1.4rem; font-weight: 700; color: var(--primary-color); margin: 0;">{{ booking.total_days }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Form -->
+    <form method="POST" id="returnForm">
+
+        <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 2rem;">
+            <!-- Left Column: KM & Condition -->
+            <div>
+                <!-- KM Section -->
+                <div style="background: #f0f4ff; border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; border: 1px solid #c8d6f0;">
+                    <h3 style="margin-bottom: 1rem; font-size: 1rem;">&#128663; Odometer &amp; KM Details</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="pickup_km">Pickup KM</label>
+                            <input type="number" id="pickup_km" name="pickup_km" class="form-control"
+                                   value="{{ booking.pickup_km or 0 }}" min="0" required oninput="calcAll()">
+                        </div>
+                        <div class="form-group">
+                            <label for="drop_km">Drop KM</label>
+                            <input type="number" id="drop_km" name="drop_km" class="form-control"
+                                   placeholder="e.g. 43500" min="0" required oninput="calcAll()">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;
+                                background: white; padding: 1rem; border-radius: 6px; text-align: center;">
+                        <div>
+                            <span style="font-size: 0.8rem; color: #666; text-transform: uppercase;">KM Run</span>
+                            <p id="disp_kmrun" style="font-size: 1.2rem; font-weight: 700; color: var(--primary-color); margin: 0;">0</p>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: #666; text-transform: uppercase;">Extra KM</span>
+                            <p id="disp_extrakm" style="font-size: 1.2rem; font-weight: 700; margin: 0;">0 km</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Condition Section -->
+                <div class="form-group">
+                    <label for="return_fuel">Fuel Level</label>
+                    <select id="return_fuel" name="return_fuel" class="form-control" required>
+                        <option value="">-- Select --</option>
+                        <option value="Full">Full</option>
+                        <option value="3/4">3/4</option>
+                        <option value="1/2">1/2</option>
+                        <option value="1/4">1/4</option>
+                        <option value="Empty">Empty</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="return_exterior">Exterior Condition</label>
+                    <select id="return_exterior" name="return_exterior" class="form-control" required>
+                        <option value="">-- Select --</option>
+                        <option value="Excellent">Excellent &mdash; No damage</option>
+                        <option value="Good">Good &mdash; Minor scratches</option>
+                        <option value="Fair">Fair &mdash; Dents or damage</option>
+                        <option value="Poor">Poor &mdash; Major damage</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="return_interior">Interior Condition</label>
+                    <select id="return_interior" name="return_interior" class="form-control" required>
+                        <option value="">-- Select --</option>
+                        <option value="Excellent">Excellent &mdash; Clean</option>
+                        <option value="Good">Good &mdash; Minor mess</option>
+                        <option value="Fair">Fair &mdash; Needs cleaning</option>
+                        <option value="Poor">Poor &mdash; Stains/damage</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Right Column: Rate Details & Photos -->
+            <div>
+                <!-- Rate Breakdown Section (Flexible Bargaining) -->
+                <div style="background: #fff9e6; border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; border: 1px solid #ffeeba;">
+                    <h3 style="margin-bottom: 1rem; font-size: 1rem;">&#128176; Rate Details &amp; Bargaining</h3>
+                    
+                    <div style="font-size: 0.9rem; line-height: 1.6;">
+                        <p style="font-size: 0.75rem; color: #856404; margin-bottom: 0.5rem;">* All amounts below are editable for bargaining.</p>
+                        
+                        <!-- Base Charge -->
+                        <div style="display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.8rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span id="rate_desc">Base Rate (<span class="days_text">{{ booking.total_days }}</span> days):</span>
+                                <input type="number" id="base_charge" class="form-control" style="width: 100px; text-align: right; padding: 0.2rem;" oninput="updateGrandTotal()">
+                            </div>
+                            <small style="color: #666;" id="rate_type_hint">Standard calculation...</small>
+                        </div>
+
+                        <!-- Extra KM Charge -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+                            <span>Extra KM (<span id="extra_km_text">0</span> km):</span>
+                            <input type="number" id="extra_km_charge" class="form-control" style="width: 100px; text-align: right; padding: 0.2rem;" oninput="updateGrandTotal()">
+                        </div>
+                        
+                        <!-- Round Off -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <label for="round_off" style="margin-bottom: 0;">Misc/Round Off (&#177;):</label>
+                            <input type="number" id="round_off" name="round_off" class="form-control" style="width: 100px; text-align: right; padding: 0.2rem;" value="0" oninput="updateGrandTotal()">
+                        </div>
+
+                        <div style="margin-top: 1rem; padding-top: 0.5rem; border-top: 2px solid #856404; display: flex; justify-content: space-between; font-size: 1.2rem; align-items: center;">
+                            <strong>Final Bargained Total:</strong>
+                            <div style="display: flex; align-items: center; gap: 0.3rem; color: #856404;">
+                                ₹<input type="number" id="final_total_input" name="final_total_input" class="form-control" 
+                                       style="width: 120px; text-align: right; font-size: 1.2rem; font-weight: 700; background: transparent; border: 1px solid #856404; color: #856404;" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Camera Photos -->
+                <div style="background: #f8f8f8; border-radius: 8px; padding: 1.2rem; border: 1px solid var(--border-color);">
+                    <h3 style="margin-bottom: 0.5rem; font-size: 1rem;">&#128247; Live Car Photos</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
+                        {% for side in ['front', 'back', 'right', 'left'] %}
+                        <div style="text-align: center;">
+                            <div id="preview_{{ side }}" style="width: 100%; height: 100px; background: #eee; border-radius: 4px;
+                                        display: flex; align-items: center; justify-content: center; margin-bottom: 0.3rem;
+                                        overflow: hidden; border: 1px solid #ddd;">
+                                <span style="color: #999; font-size: 0.75rem;">{{ side|title }}</span>
+                            </div>
+                            <input type="file" id="cam_{{ side }}" accept="image/*" capture="environment" style="display:none;" onchange="previewPhoto('{{ side }}', this)">
+                            <input type="hidden" name="photo_{{ side }}" id="photo_data_{{ side }}">
+                            <button type="button" class="btn btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; width: 100%;" onclick="document.getElementById('cam_{{ side }}').click();">
+                                Capture
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 1.5rem;">
+            <label for="return_notes">Additional Notes (optional)</label>
+            <textarea id="return_notes" name="return_notes" class="form-control" rows="2" placeholder="Damage remarks, bargaining notes, etc..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="padding: 0.6rem 2rem;">&#10003; Confirm &amp; Complete</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const dailyRate = {{ booking.daily_rate }};
+    const monthlyRate = {{ booking.monthly_rate }};
+    const extraKmRate = {{ booking.extra_km_rate }};
+    let currentDays = {{ booking.total_days }};
+
+    function calcAll() {
+        // 1. Calculate Days
+        const p = document.getElementById('pickup_date').value;
+        const d = document.getElementById('drop_date').value;
+        if (p && d) {
+            const d1 = new Date(p);
+            const d2 = new Date(d);
+            const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+            currentDays = Math.max(diff, 1);
+        }
+        document.getElementById('disp_days_top').textContent = currentDays;
+        const daysEls = document.querySelectorAll('.days_text');
+        daysEls.forEach(el => el.textContent = currentDays);
+
+        // 2. Calculate Standard Base Charge
+        const baseInput = document.getElementById('base_charge');
+        const hint = document.getElementById('rate_type_hint');
+        let standardBase = 0;
+        
+        if (currentDays > 15) {
+            standardBase = Math.round((monthlyRate / 30) * currentDays);
+            hint.textContent = `Prorated Monthly: (₹${monthlyRate}/30) \u00d7 ${currentDays} days`;
+        } else {
+            standardBase = dailyRate * currentDays;
+            hint.textContent = `Daily Rate: ₹${dailyRate} \u00d7 ${currentDays} days`;
+        }
+        
+        // Auto-fill base if empty
+        if (!baseInput.value) {
+            baseInput.value = standardBase;
+        }
+
+        // 3. Calculate KM Run & Extra Charges
+        const pickupKm = parseInt(document.getElementById('pickup_km').value) || 0;
+        const dropKm   = parseInt(document.getElementById('drop_km').value) || 0;
+        const freeKm = currentDays * 100;
+
+        const kmRun = Math.max(dropKm - pickupKm, 0);
+        const extraKm = Math.max(kmRun - freeKm, 0);
+        const standardExtraCharge = extraKm * extraKmRate;
+
+        document.getElementById('disp_kmrun').textContent = kmRun;
+        document.getElementById('extra_km_text').textContent = extraKm;
+        
+        const extraEl = document.getElementById('disp_extrakm');
+        extraEl.textContent = extraKm + ' km';
+        extraEl.style.color = extraKm > 0 ? '#dc3545' : '#28a745';
+
+        const extraInput = document.getElementById('extra_km_charge');
+        if (!extraInput.value || extraInput.value == 0) {
+            extraInput.value = standardExtraCharge;
+        }
+
+        updateGrandTotal();
+    }
+
+    function updateGrandTotal() {
+        const base = parseInt(document.getElementById('base_charge').value) || 0;
+        const extra = parseInt(document.getElementById('extra_km_charge').value) || 0;
+        const round = parseInt(document.getElementById('round_off').value) || 0;
+        
+        const total = base + extra + round;
+        document.getElementById('final_total_input').value = total;
+    }
+
+    function previewPhoto(side, input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64 = e.target.result;
+            document.getElementById('photo_data_' + side).value = base64;
+            const previewDiv = document.getElementById('preview_' + side);
+            previewDiv.innerHTML = '<img src="' + base64 + '" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    window.onload = calcAll;
+</script>
+{% endblock %}

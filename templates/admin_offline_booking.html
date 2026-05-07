@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Offline Booking - Admin{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 2rem auto; padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+        <h2>+ New Offline Booking</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">&larr; Back</a>
+    </div>
+
+    <form method="POST">
+        <!-- Customer Info -->
+        <h3 style="font-size: 1rem; margin-bottom: 1rem; color: var(--primary-color);">Customer Details</h3>
+        <div class="form-group">
+            <label for="customer_name">Full Name</label>
+            <input type="text" id="customer_name" name="customer_name" class="form-control" placeholder="e.g. Rahul Kumar" required>
+        </div>
+        <div class="form-group">
+            <label for="customer_phone">Phone Number</label>
+            <input type="tel" id="customer_phone" name="customer_phone" class="form-control" placeholder="e.g. 9876543210" required>
+        </div>
+
+        <!-- Vehicle & Dates -->
+        <h3 style="font-size: 1rem; margin-top: 1.5rem; margin-bottom: 1rem; color: var(--primary-color);">Booking Info</h3>
+        <div class="form-group">
+            <label for="car_id">Select Car</label>
+            <select id="car_id" name="car_id" class="form-control" required onchange="updateRates()">
+                <option value="">-- Choose Car --</option>
+                {% for car in cars %}
+                <option value="{{ car.id }}" 
+                        data-daily="{{ car.daily_rate }}" 
+                        data-monthly="{{ car.monthly_rate }}">
+                    {{ car.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label for="pickup_date">Pickup Date</label>
+                <input type="date" id="pickup_date" name="pickup_date" class="form-control" required onchange="updateRates()">
+            </div>
+            <div class="form-group">
+                <label for="drop_date">Drop Date</label>
+                <input type="date" id="drop_date" name="drop_date" class="form-control" required onchange="updateRates()">
+            </div>
+        </div>
+
+        <!-- Odometer at Pickup -->
+        <div class="form-group">
+            <label for="pickup_km">Current Odometer (KM)</label>
+            <input type="number" id="pickup_km" name="pickup_km" class="form-control" placeholder="e.g. 12500" required>
+        </div>
+
+        <!-- Rate & Bargaining -->
+        <div style="background: #fff9e6; border-radius: 8px; padding: 1.2rem; margin-top: 1rem; border: 1px solid #ffeeba;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <label for="total_amount" style="margin-bottom: 0; font-weight: 700;">Agreed Total Amount (₹):</label>
+                <span style="font-size: 0.8rem; color: #856404;">* Flexible / Bargained</span>
+            </div>
+            <input type="number" id="total_amount" name="total_amount" class="form-control" 
+                   style="font-size: 1.2rem; font-weight: 700; color: #856404;" placeholder="₹ Negotiated Amount" required>
+            <p id="calc_hint" style="font-size: 0.75rem; color: #666; margin-top: 0.5rem;"></p>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.8rem;">Confirm Booking</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function updateRates() {
+        const carSelect = document.getElementById('car_id');
+        const selected = carSelect.options[carSelect.selectedIndex];
+        const pDate = document.getElementById('pickup_date').value;
+        const dDate = document.getElementById('drop_date').value;
+        const amountInput = document.getElementById('total_amount');
+        const hint = document.getElementById('calc_hint');
+
+        if (selected.value && pDate && dDate) {
+            const daily = parseInt(selected.getAttribute('data-daily'));
+            const monthly = parseInt(selected.getAttribute('data-monthly'));
+            
+            const d1 = new Date(pDate);
+            const d2 = new Date(dDate);
+            const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+            const days = Math.max(diff, 1);
+
+            let calculated = 0;
+            if (days > 15) {
+                calculated = Math.round((monthly / 30) * days);
+                hint.textContent = `Standard Prorated: ₹${calculated} (${days} days @ ₹${Math.round(monthly/30)}/day)`;
+            } else {
+                calculated = daily * days;
+                hint.textContent = `Standard Total: ₹${calculated} (${days} days @ ₹${daily}/day)`;
+            }
+            
+            // Only set value if it's empty to allow manual bargaining
+            if (!amountInput.value) {
+                amountInput.value = calculated;
+            }
+        }
+    }
+</script>
+{% endblock %}

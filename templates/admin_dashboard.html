@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard - Pablo's Rentals{% endblock %}
+
+{% block content %}
+<div style="margin-top: 2rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h1>Admin Dashboard</h1>
+        <p>Manage fleet, view bookings, and reply to customer inquiries.</p>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+        <a href="{{ url_for('admin_offline_booking') }}" class="btn btn-outline" style="white-space: nowrap;">+ Offline Booking</a>
+        <a href="{{ url_for('admin_add_car') }}" class="btn btn-primary" style="white-space: nowrap;">+ Add New Car</a>
+    </div>
+</div>
+
+<!-- Fleet Management -->
+<div class="card" style="margin-bottom: 2rem;">
+    <h2 style="margin-bottom: 1rem;">Fleet Management</h2>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-color); border-bottom: 2px solid var(--border-color); text-align: left;">
+                    <th style="padding: 0.6rem 0.8rem;">Car</th>
+                    <th style="padding: 0.6rem 0.8rem;">Qty</th>
+                    <th style="padding: 0.6rem 0.8rem;">Daily (&#8377;)</th>
+                    <th style="padding: 0.6rem 0.8rem;">Monthly (&#8377;)</th>
+                    <th style="padding: 0.6rem 0.8rem;">Extra km (&#8377;)</th>
+                    <th style="padding: 0.6rem 0.8rem;">Description</th>
+                    <th style="padding: 0.6rem 0.8rem; text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for car in cars %}
+                <tr style="border-bottom: 1px solid var(--border-color); vertical-align: middle;">
+                    <td style="padding: 0.7rem 0.8rem;"><strong>{{ car.name }}</strong></td>
+                    <td style="padding: 0.7rem 0.8rem;">{{ car.quantity }}</td>
+                    <td style="padding: 0.7rem 0.8rem;">{{ car.daily_rate }}</td>
+                    <td style="padding: 0.7rem 0.8rem;">{{ car.monthly_rate }}</td>
+                    <td style="padding: 0.7rem 0.8rem;">{{ car.extra_km_rate }}/km</td>
+                    <td style="padding: 0.7rem 0.8rem; font-size: 0.85rem; color: #555; max-width: 200px;">{{ car.description }}</td>
+                    <td style="padding: 0.7rem 0.8rem; text-align: center; white-space: nowrap;">
+                        <a href="{{ url_for('admin_edit_car', car_id=car.id) }}"
+                           class="btn btn-outline"
+                           style="padding: 0.25rem 0.6rem; font-size: 0.8rem; margin-right: 0.3rem;">&#9998; Edit</a>
+                        <form action="{{ url_for('admin_delete_car', car_id=car.id) }}" method="POST"
+                              style="display:inline;"
+                              onsubmit="return confirm('Delete {{ car.name }}? This cannot be undone.');">
+                            <button type="submit"
+                                    style="padding: 0.25rem 0.6rem; font-size: 0.8rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">&#128465; Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if not cars %}
+        <p style="text-align: center; margin-top: 1.5rem; color: #666;">No cars in fleet. <a href="{{ url_for('admin_add_car') }}">Add one now</a>.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Car Return Verification -->
+<div class="card" style="margin-bottom: 2rem; border-left: 4px solid #e67e22;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2>&#128663; Car Return Verification</h2>
+        {% if pending_returns %}
+        <span style="background: #e67e22; color: white; padding: 0.2rem 0.7rem;
+                     border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+            {{ pending_returns|length }} Pending
+        </span>
+        {% endif %}
+    </div>
+    {% if pending_returns %}
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--bg-color); border-bottom: 2px solid var(--border-color); text-align: left;">
+                    <th style="padding: 0.6rem;">Booking #</th>
+                    <th style="padding: 0.6rem;">Customer</th>
+                    <th style="padding: 0.6rem;">Car</th>
+                    <th style="padding: 0.6rem;">Drop Date</th>
+                    <th style="padding: 0.6rem;">Status</th>
+                    <th style="padding: 0.6rem; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in pending_returns %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.6rem;">#{{ b.id }}</td>
+                    <td style="padding: 0.6rem;">{{ b.user_name }}<br>
+                        <span style="font-size:0.8rem; color:#888;">{{ b.user_phone }}</span></td>
+                    <td style="padding: 0.6rem;">{{ b.car_name }}</td>
+                    <td style="padding: 0.6rem;">{{ b.drop_date }}</td>
+                    <td style="padding: 0.6rem;">
+                        <span style="background:#fff3cd; color:#856404; padding: 0.2rem 0.5rem;
+                                     border-radius: 4px; font-size: 0.8rem;">{{ b.status|title }}</span>
+                    </td>
+                    <td style="padding: 0.6rem; text-align: center;">
+                        <a href="{{ url_for('admin_verify_return', booking_id=b.id) }}"
+                           class="btn btn-primary"
+                           style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">
+                            &#10003; Verify Return
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: #28a745; font-weight: 500;">&#10003; No pending returns — all cars accounted for.</p>
+    {% endif %}
+</div>
+
+<!-- Recent Bookings -->
+<div class="card" style="margin-bottom: 2rem;">
+    <h2>Recent Bookings</h2>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
+                    <th style="padding: 0.5rem;">ID</th>
+                    <th style="padding: 0.5rem;">Customer</th>
+                    <th style="padding: 0.5rem;">Car</th>
+                    <th style="padding: 0.5rem;">Dates</th>
+                    <th style="padding: 0.5rem;">Amount</th>
+                    <th style="padding: 0.5rem;">Status</th>
+                    <th style="padding: 0.5rem; text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;">#{{ booking.id }}</td>
+                    <td style="padding: 0.5rem;">{{ booking.user_name }}</td>
+                    <td style="padding: 0.5rem;">{{ booking.car_name }}</td>
+                    <td style="padding: 0.5rem;">{{ booking.pickup_date }} to {{ booking.drop_date }}</td>
+                    <td style="padding: 0.5rem;">&#8377;{{ booking.total_amount }}</td>
+                    <td style="padding: 0.5rem;">
+                        {% if booking.return_verified %}
+                        <span style="background-color: #d4edda; color: #155724; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">&#10003; Returned</span>
+                        {% elif booking.status == 'cancelled' %}
+                        <span style="background-color: #f8d7da; color: #721c24; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">Cancelled</span>
+                        {% else %}
+                        <span style="background-color: #e9ecef; color: #333; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">{{ booking.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 0.5rem; text-align: center;">
+                        {% if not booking.return_verified and booking.status != 'cancelled' %}
+                        <form action="{{ url_for('admin_cancel_booking', booking_id=booking.id) }}" method="POST" 
+                              style="display: inline;" onsubmit="return confirm('Cancel booking #{{ booking.id }}?');">
+                            <button type="submit" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #fff; color: #dc3545; border: 1px solid #dc3545;">
+                                Cancel
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if not bookings %}
+        <p style="text-align: center; margin-top: 1rem; color: #666;">No bookings found.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Customer Inquiries -->
+<div class="card">
+    <h2>Customer Inquiries</h2>
+    <ul style="list-style: none; padding: 0; margin-top: 1rem;">
+        {% for u in users %}
+        <li style="border-bottom: 1px solid var(--border-color); padding: 0.75rem 0; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <strong>{{ u.name }}</strong>
+                <br><span style="font-size: 0.85rem; color: #666;">{{ u.email }} &bull; {{ u.phone }}</span>
+            </div>
+            <a href="{{ url_for('admin_chat', user_id=u.id) }}" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">View Chat</a>
+        </li>
+        {% endfor %}
+        {% if not users %}
+        <li style="color: #666; padding: 1rem 0;">No registered customers yet.</li>
+        {% endif %}
+    </ul>
+</div>
+{% endblock %}

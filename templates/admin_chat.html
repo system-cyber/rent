@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Chat with {{ target_user.name }} - Admin{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 2rem auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+        <h2>Chat with {{ target_user.name }}</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">Back to Dashboard</a>
+    </div>
+    
+    <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+        <p><strong>Email:</strong> {{ target_user.email }}</p>
+        <p><strong>Phone:</strong> {{ target_user.phone }}</p>
+    </div>
+    
+    <div class="chat-box" id="chatBox">
+        {% for msg in messages %}
+            <div class="message {% if msg.sender == 'admin' %}msg-admin{% else %}msg-customer{% endif %}">
+                <p style="margin:0; font-size: 0.9rem;">{{ msg.content }}</p>
+                <span style="font-size: 0.7rem; opacity: 0.7;">{{ msg.timestamp.split(' ')[1][:5] }}</span>
+            </div>
+        {% endfor %}
+        {% if not messages %}
+            <p style="text-align: center; color: #999; font-size: 0.9rem; margin-top: 2rem;">No messages yet.</p>
+        {% endif %}
+    </div>
+    
+    <form action="{{ url_for('send_message') }}" method="POST" style="display: flex; gap: 0.5rem;">
+        <input type="hidden" name="target_user_id" value="{{ target_user.id }}">
+        <input type="text" name="content" class="form-control" placeholder="Type a reply..." required>
+        <button type="submit" class="btn btn-primary">Send Reply</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const chatBox = document.getElementById('chatBox');
+    chatBox.scrollTop = chatBox.scrollHeight;
+</script>
+{% endblock %}

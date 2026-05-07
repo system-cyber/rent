@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Book {{ car.name }} - Pablo's Rentals{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 2rem auto; padding: 2rem;">
+    <h2>Book {{ car.name }}</h2>
+    <p style="margin-bottom: 2rem; color: #666;">Fill in the details to book your car. Advance payment via UPI is required to confirm.</p>
+    
+    <form method="POST" action="{{ url_for('book', car_id=car.id) }}" id="bookingForm">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" class="form-control" value="{{ g.user.name }}" required readonly>
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" class="form-control" value="{{ g.user.email }}" required readonly>
+        </div>
+        <div class="form-group">
+            <label for="phone">Mobile Number</label>
+            <input type="tel" id="phone" name="phone" class="form-control" value="{{ g.user.phone }}" required readonly>
+        </div>
+        <div class="form-group">
+            <label for="vehicle">Vehicle</label>
+            <input type="text" id="vehicle" class="form-control" value="{{ car.name }}" readonly>
+        </div>
+        
+        <div style="display: flex; gap: 1rem;">
+            <div class="form-group" style="flex: 1;">
+                <label for="pickup_date">Pickup Date</label>
+                <input type="date" id="pickup_date" name="pickup_date" class="form-control" required onchange="calculate()">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="drop_date">Drop Date</label>
+                <input type="date" id="drop_date" name="drop_date" class="form-control" required onchange="calculate()">
+            </div>
+        </div>
+        
+        <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <strong>Number of Days:</strong>
+                <span id="display_days">0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <strong>Estimated Rate:</strong>
+                <span id="display_rate">₹0</span>
+            </div>
+            <p style="font-size: 0.8rem; color: #666; margin-top: 0.5rem; display: none;" id="monthly_note">* Applied prorated monthly rate (over 15 days)</p>
+        </div>
+        
+        <div class="alert alert-info">
+            <strong>Advance Payment:</strong> Please pay the advance via UPI to <br>
+            <span style="font-family: monospace; font-size: 1.1rem;">noelpbiju-1@oksbi</span>
+        </div>
+        
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Confirm Booking</button>
+            <a href="https://wa.me/917025328233" target="_blank" class="btn btn-success" style="background-color: #25D366; border:none; flex: 1; text-align: center;">Enquiry via WhatsApp</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const dailyRate = {{ car.daily_rate }};
+    const monthlyRate = {{ car.monthly_rate }};
+    
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('pickup_date').min = today;
+    
+    document.getElementById('pickup_date').addEventListener('change', function() {
+        document.getElementById('drop_date').min = this.value;
+    });
+
+    function calculate() {
+        const pickup = document.getElementById('pickup_date').value;
+        const drop = document.getElementById('drop_date').value;
+        
+        if (pickup && drop) {
+            const d1 = new Date(pickup);
+            const d2 = new Date(drop);
+            const diffTime = Math.abs(d2 - d1);
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) diffDays = 1; // Minimum 1 day
+            
+            document.getElementById('display_days').textContent = diffDays;
+            
+            let rate = 0;
+            if (diffDays > 15) {
+                rate = Math.round((monthlyRate / 30) * diffDays);
+                document.getElementById('monthly_note').style.display = 'block';
+            } else {
+                rate = dailyRate * diffDays;
+                document.getElementById('monthly_note').style.display = 'none';
+            }
+            
+            document.getElementById('display_rate').textContent = '₹' + rate;
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}My Dashboard - Pablo's Rentals{% endblock %}
+
+{% block content %}
+<div style="margin-top: 2rem;">
+    <h1>Welcome, {{ g.user.name }}</h1>
+    <p>Manage your bookings and inquiries below.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 2rem;">
+    <!-- Bookings -->
+    <div>
+        <h2>Your Bookings</h2>
+        {% if bookings %}
+            {% for booking in bookings %}
+            <div class="card" style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h3>{{ booking.car_name }}</h3>
+                    <span style="background-color: #e9ecef; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">Status: {{ booking.status|title }}</span>
+                </div>
+                <p><strong>Dates:</strong> {{ booking.pickup_date }} to {{ booking.drop_date }} ({{ booking.total_days }} days)</p>
+                <p><strong>Total Amount:</strong> ₹{{ booking.total_amount }}</p>
+                
+                {% if booking.status not in ['returned', 'cancelled'] %}
+                <div style="margin-top: 0.8rem; border-top: 1px solid #eee; padding-top: 0.8rem;">
+                    <form action="{{ url_for('cancel_booking', booking_id=booking.id) }}" method="POST" 
+                          onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                        <button type="submit" class="btn" style="background: #fff; color: #dc3545; border: 1px solid #dc3545; padding: 0.2rem 0.6rem; font-size: 0.8rem;">
+                            Cancel Booking
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card">
+                <p>You have no bookings yet. <a href="{{ url_for('index') }}">Browse our fleet</a>.</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Chat -->
+    <div>
+        <h2>Customer Support</h2>
+        <div class="card">
+            <div class="chat-box" id="chatBox">
+                {% for msg in messages %}
+                    <div class="message {% if msg.sender == 'customer' %}msg-customer-me{% else %}msg-admin-reply{% endif %}">
+                        <p style="margin:0; font-size: 0.9rem;">{{ msg.content }}</p>
+                        <span style="font-size: 0.7rem; opacity: 0.7;">{{ msg.timestamp.split(' ')[1][:5] }}</span>
+                    </div>
+                {% endfor %}
+                {% if not messages %}
+                    <p style="text-align: center; color: #999; font-size: 0.9rem; margin-top: 2rem;">Start a conversation with admin.</p>
+                {% endif %}
+            </div>
+            <form action="{{ url_for('send_message') }}" method="POST" style="display: flex; gap: 0.5rem;">
+                <input type="text" name="content" class="form-control" placeholder="Type a message..." required>
+                <button type="submit" class="btn btn-primary">Send</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Scroll chat to bottom
+    const chatBox = document.getElementById('chatBox');
+    chatBox.scrollTop = chatBox.scrollHeight;
+</script>
+{% endblock %}
