@@ -215,6 +215,88 @@ def send_message():
         return redirect(url_for('admin_chat', user_id=target_user_id))
     return redirect(url_for('customer_dashboard'))
 
+# --- Global Live Chat API ---
+@app.route('/api/chat/init', methods=['POST'])
+def api_chat_init():
+    if g.user:
+        return jsonify({'success': True, 'user_id': g.user['id']})
+    
+    data = request.json
+    name = data.get('name', '').strip()
+    phone = data.get('phone', '').strip()
+    
+    if not name or not phone:
+        return jsonify({'success': False, 'error': 'Name and phone are required'}), 400
+        
+    user = g.db.execute('SELECT id FROM users WHERE phone = ?', (phone,)).fetchone()
+    if not user:
+        import time
+        unique_suffix = str(int(time.time()))
+        guest_username = f"guest_{phone}_{unique_suffix}"
+        dummy_email = f"guest_{phone}@chat.local"
+        g.db.execute('INSERT INTO users (username, password, name, email, phone, role) VALUES (?, ?, ?, ?, ?, ?)',
+                     (guest_username, "offline", name, dummy_email, phone, "customer"))
+        user_id = g.db.execute('SELECT last_insert_rowid()').fetchone()[0]
+        g.db.commit()
+    else:
+        user_id = user['id']
+        
+    session['guest_id'] = user_id
+    return jsonify({'success': True, 'user_id': user_id})
+
+@app.route('/api/chat/messages', methods=['GET'])
+def api_chat_messages():
+    user_id = None
+    if g.user:
+        user_id = g.user['id']
+    elif 'guest_id' in session:
+        user_id = session['guest_id']
+        
+    if not user_id:
+        return jsonify({'messages': []})
+        
+    messages = g.db.execute('SELECT * FROM messages WHERE user_id = ? ORDER BY timestamp ASC', (user_id,)).fetchall()
+    
+    msg_list = []
+    for msg in messages:
+        # Format the timestamp exactly like the template does
+        # msg.timestamp is '%Y-%m-%d %H:%M:%S'
+        time_part = msg['timestamp'].split(' ')[1][:5] if ' ' in msg['timestamp'] else ''
+        msg_list.append({
+            'id': msg['id'],
+            'content': msg['content'],
+            'sender': msg['sender'],
+            'time': time_part
+        })
+        
+    return jsonify({'messages': msg_list})
+
+@app.route('/api/chat/send', methods=['POST'])
+def api_chat_send():
+    user_id = None
+    if g.user:
+        user_id = g.user['id']
+    elif 'guest_id' in session:
+        user_id = session['guest_id']
+        
+    if not user_id:
+        return jsonify({'success': False, 'error': 'Not initialized'}), 401
+        
+    data = request.json
+    content = data.get('content', '').strip()
+    if not content:
+        return jsonify({'success': False, 'error': 'Empty message'}), 400
+        
+    sender = 'admin' if (g.user and g.user['role'] == 'admin') else 'customer'
+    target_user_id = data.get('target_user_id', user_id)
+    
+    g.db.execute('''
+        INSERT INTO messages (user_id, content, sender, timestamp) VALUES (?, ?, ?, ?)
+    ''', (target_user_id, content, sender, get_corrected_time_str()))
+    g.db.commit()
+    
+    return jsonify({'success': True})
+
 # --- Admin Routes ---
 
 @app.route('/admin')

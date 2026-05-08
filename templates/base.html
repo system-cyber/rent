@@ -43,6 +43,145 @@
         <p>&copy; 2022 - 2026 Pablo's Rentals. All rights reserved.</p>
         <p>Contact: <a href="https://wa.me/917025328233" style="color:#25D366;">WhatsApp (+91 7025328233)</a></p>
     </footer>
+    {% if not (g.user and g.user.role == 'admin') %}
+    <!-- Global Floating Live Chat Widget -->
+    <div id="global-chat-widget">
+        <button id="chat-toggle-btn">&#128172; Live Support</button>
+        <div id="chat-panel" style="display: none;">
+            <div id="chat-header">
+                <strong>Customer Support</strong>
+                <span id="close-chat" style="cursor:pointer; font-size: 1.2rem;">&times;</span>
+            </div>
+            
+            <div id="chat-body">
+                <div id="chat-init-form" style="display: none;">
+                    <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Please enter your details to start chatting.</p>
+                    <input type="text" id="chat-init-name" placeholder="Your Name" class="form-control" style="margin-bottom: 0.5rem;" required>
+                    <input type="tel" id="chat-init-phone" placeholder="Your Phone Number" class="form-control" style="margin-bottom: 1rem;" required>
+                    <button id="chat-init-btn" class="btn btn-primary" style="width: 100%;">Start Chat</button>
+                </div>
+                
+                <div id="chat-messages" style="display: none;"></div>
+            </div>
+            
+            <div id="chat-footer" style="display: none;">
+                <input type="text" id="chat-input" placeholder="Type a message..." class="form-control" style="flex: 1; border-radius: 4px; border: 1px solid #ddd; padding: 0.4rem;">
+                <button id="chat-send-btn" class="btn btn-primary" style="padding: 0.4rem 0.8rem; border-radius: 4px;">Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const chatToggleBtn = document.getElementById('chat-toggle-btn');
+        const chatPanel = document.getElementById('chat-panel');
+        const closeChat = document.getElementById('close-chat');
+        const initForm = document.getElementById('chat-init-form');
+        const chatMessagesContainer = document.getElementById('chat-messages');
+        const chatFooter = document.getElementById('chat-footer');
+        
+        let isChatInitialized = false;
+        let chatPollInterval = null;
+        
+        {% if g.user %}
+            isChatInitialized = true;
+        {% elif session.get('guest_id') %}
+            isChatInitialized = true;
+        {% endif %}
+
+        chatToggleBtn.addEventListener('click', () => {
+            chatPanel.style.display = 'flex';
+            chatToggleBtn.style.display = 'none';
+            
+            if (isChatInitialized) {
+                initForm.style.display = 'none';
+                chatMessagesContainer.style.display = 'flex';
+                chatFooter.style.display = 'flex';
+                fetchChatMessages();
+                chatPollInterval = setInterval(fetchChatMessages, 3000);
+            } else {
+                initForm.style.display = 'block';
+                chatMessagesContainer.style.display = 'none';
+                chatFooter.style.display = 'none';
+            }
+        });
+
+        closeChat.addEventListener('click', () => {
+            chatPanel.style.display = 'none';
+            chatToggleBtn.style.display = 'block';
+            if (chatPollInterval) clearInterval(chatPollInterval);
+        });
+
+        document.getElementById('chat-init-btn').addEventListener('click', () => {
+            const name = document.getElementById('chat-init-name').value;
+            const phone = document.getElementById('chat-init-phone').value;
+            if(!name || !phone) { alert("Please enter both name and phone number"); return; }
+            
+            fetch('/api/chat/init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone })
+            }).then(res => res.json()).then(data => {
+                if(data.success) {
+                    isChatInitialized = true;
+                    initForm.style.display = 'none';
+                    chatMessagesContainer.style.display = 'flex';
+                    chatFooter.style.display = 'flex';
+                    fetchChatMessages();
+                    chatPollInterval = setInterval(fetchChatMessages, 3000);
+                }
+            });
+        });
+
+        function fetchChatMessages() {
+            fetch('/api/chat/messages')
+                .then(res => res.json())
+                .then(data => {
+                    if(data.messages.length === 0) {
+                        chatMessagesContainer.innerHTML = '<p style="text-align:center; color:#999; font-size:0.85rem; margin-top:2rem;">Start a conversation with admin.</p>';
+                        return;
+                    }
+                    
+                    let isScrolledToBottom = chatMessagesContainer.scrollHeight - chatMessagesContainer.clientHeight <= chatMessagesContainer.scrollTop + 10;
+                    chatMessagesContainer.innerHTML = '';
+                    
+                    data.messages.forEach(msg => {
+                        const div = document.createElement('div');
+                        const isMyMessage = (msg.sender === 'customer');
+                        div.className = 'message ' + (isMyMessage ? 'msg-customer-me' : 'msg-admin-reply');
+                        div.innerHTML = `<p style="margin:0; font-size: 0.9rem;">${msg.content}</p><span style="font-size: 0.7rem; opacity: 0.7;">${msg.time}</span>`;
+                        chatMessagesContainer.appendChild(div);
+                    });
+                    
+                    if (isScrolledToBottom) {
+                        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+                    }
+                });
+        }
+
+        document.getElementById('chat-send-btn').addEventListener('click', sendMessage);
+        document.getElementById('chat-input').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') sendMessage();
+        });
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const content = input.value.trim();
+            if(!content) return;
+            
+            input.value = '';
+            fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
+            }).then(res => res.json()).then(data => {
+                if(data.success) {
+                    fetchChatMessages();
+                    setTimeout(() => { chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight; }, 100);
+                }
+            });
+        }
+    </script>
+    {% endif %}
     {% block scripts %}{% endblock %}
 </body>
 </html>
