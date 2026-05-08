@@ -191,6 +191,12 @@ def book(car_id):
         
     return render_template('book.html', car=car)
 
+from datetime import timedelta
+
+def get_corrected_time_str():
+    corrected = datetime.now() + timedelta(seconds=ntp_offset)
+    return corrected.strftime('%Y-%m-%d %H:%M:%S')
+
 @app.route('/send_message', methods=['POST'])
 def send_message():
     if not g.user:
@@ -201,8 +207,8 @@ def send_message():
     target_user_id = request.form.get('target_user_id', g.user['id'])
     
     g.db.execute('''
-        INSERT INTO messages (user_id, content, sender) VALUES (?, ?, ?)
-    ''', (target_user_id, content, sender))
+        INSERT INTO messages (user_id, content, sender, timestamp) VALUES (?, ?, ?, ?)
+    ''', (target_user_id, content, sender, get_corrected_time_str()))
     g.db.commit()
     
     if sender == 'admin':

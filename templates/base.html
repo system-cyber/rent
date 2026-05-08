@@ -12,9 +12,6 @@
     <nav class="navbar">
         <a href="{{ url_for('index') }}" class="nav-brand">Pablo's Rentals</a>
         <div class="nav-links">
-            <div id="live_clock" style="font-weight: 500; font-size: 0.9rem; color: #555; background: #eee; padding: 0.3rem 0.6rem; border-radius: 4px; display: flex; align-items: center; margin-right: 0.5rem;">
-                &#128338; Syncing...
-            </div>
             <a href="{{ url_for('index') }}">Home</a>
             {% if g.user %}
                 {% if g.user.role == 'admin' %}
@@ -46,29 +43,6 @@
         <p>&copy; 2022 - 2026 Pablo's Rentals. All rights reserved.</p>
         <p>Contact: <a href="https://wa.me/917025328233" style="color:#25D366;">WhatsApp (+91 7025328233)</a></p>
     </footer>
-
-    <script>
-        let timeOffset = 0;
-
-        function fetchTime() {
-            fetch('/api/time')
-                .then(response => response.json())
-                .then(data => {
-                    const serverTimeMs = data.correct_time_ms;
-                    timeOffset = serverTimeMs - new Date().getTime();
-                })
-                .catch(err => console.error("NTP sync error:", err));
-        }
-
-        function updateClock() {
-            const correctTime = new Date(new Date().getTime() + timeOffset);
-            document.getElementById('live_clock').innerText = "\uD83D\uDD52 " + correctTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-        }
-
-        fetchTime();
-        setInterval(fetchTime, 60000);
-        setInterval(updateClock, 1000);
-    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
