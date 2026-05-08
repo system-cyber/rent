@@ -2,7 +2,7 @@
 {% block title %}Admin Dashboard - Pablo's Rentals{% endblock %}
 
 {% block content %}
-<div style="margin-top: 2rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+<div style="margin-top: 2rem; margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
     <div>
         <h1>Admin Dashboard</h1>
         <p>Manage fleet, view bookings, and reply to customer inquiries.</p>
@@ -15,30 +15,30 @@
 
 <!-- Fleet Management -->
 <div class="card" style="margin-bottom: 2rem;">
-    <h2 style="margin-bottom: 1rem;">Fleet Management</h2>
+    <h2 style="margin-bottom: 1.2rem; color: var(--primary);">&#128663; Fleet Management</h2>
     <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse;">
+        <table>
             <thead>
-                <tr style="background: var(--bg-color); border-bottom: 2px solid var(--border-color); text-align: left;">
-                    <th style="padding: 0.6rem 0.8rem;">Car</th>
-                    <th style="padding: 0.6rem 0.8rem;">Qty</th>
-                    <th style="padding: 0.6rem 0.8rem;">Daily (&#8377;)</th>
-                    <th style="padding: 0.6rem 0.8rem;">Monthly (&#8377;)</th>
-                    <th style="padding: 0.6rem 0.8rem;">Extra km (&#8377;)</th>
-                    <th style="padding: 0.6rem 0.8rem;">Description</th>
-                    <th style="padding: 0.6rem 0.8rem; text-align: center;">Actions</th>
+                <tr>
+                    <th>Car</th>
+                    <th>Qty</th>
+                    <th>Daily (&#8377;)</th>
+                    <th>Monthly (&#8377;)</th>
+                    <th>Extra km (&#8377;)</th>
+                    <th>Description</th>
+                    <th style="text-align: center;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for car in cars %}
-                <tr style="border-bottom: 1px solid var(--border-color); vertical-align: middle;">
-                    <td style="padding: 0.7rem 0.8rem;"><strong>{{ car.name }}</strong></td>
-                    <td style="padding: 0.7rem 0.8rem;">{{ car.quantity }}</td>
-                    <td style="padding: 0.7rem 0.8rem;">{{ car.daily_rate }}</td>
-                    <td style="padding: 0.7rem 0.8rem;">{{ car.monthly_rate }}</td>
-                    <td style="padding: 0.7rem 0.8rem;">{{ car.extra_km_rate }}/km</td>
-                    <td style="padding: 0.7rem 0.8rem; font-size: 0.85rem; color: #555; max-width: 200px;">{{ car.description }}</td>
-                    <td style="padding: 0.7rem 0.8rem; text-align: center; white-space: nowrap;">
+                <tr>
+                    <td><strong style="color: var(--text);">{{ car.name }}</strong></td>
+                    <td>{{ car.quantity }}</td>
+                    <td style="color: var(--primary); font-weight: 600;">{{ car.daily_rate }}</td>
+                    <td>{{ car.monthly_rate }}</td>
+                    <td>{{ car.extra_km_rate }}/km</td>
+                    <td style="font-size: 0.85rem; color: var(--text-muted); max-width: 200px;">{{ car.description }}</td>
+                    <td style="text-align: center; white-space: nowrap;">
                         <a href="{{ url_for('admin_edit_car', car_id=car.id) }}"
                            class="btn btn-outline"
                            style="padding: 0.25rem 0.6rem; font-size: 0.8rem; margin-right: 0.3rem;">&#9998; Edit</a>
@@ -46,7 +46,7 @@
                               style="display:inline;"
                               onsubmit="return confirm('Delete {{ car.name }}? This cannot be undone.');">
                             <button type="submit"
-                                    style="padding: 0.25rem 0.6rem; font-size: 0.8rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">&#128465; Delete</button>
+                                    style="padding: 0.25rem 0.6rem; font-size: 0.8rem; background: rgba(244,63,94,0.15); color: var(--error); border: 1px solid rgba(244,63,94,0.3); border-radius: 6px; cursor: pointer;">&#128465; Delete</button>
                         </form>
                     </td>
                 </tr>
@@ -54,58 +54,56 @@
             </tbody>
         </table>
         {% if not cars %}
-        <p style="text-align: center; margin-top: 1.5rem; color: #666;">No cars in fleet. <a href="{{ url_for('admin_add_car') }}">Add one now</a>.</p>
+        <p style="text-align: center; margin-top: 1.5rem; color: var(--text-muted);">No cars in fleet. <a href="{{ url_for('admin_add_car') }}">Add one now</a>.</p>
         {% endif %}
     </div>
 </div>
 
 <!-- Car Return Verification -->
-<div class="card" style="margin-bottom: 2rem; border-left: 4px solid #e67e22;">
+<div class="card" style="margin-bottom: 2rem; border-color: rgba(245,158,11,0.4);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <h2>&#128663; Car Return Verification</h2>
         {% if pending_returns %}
-        <span style="background: #e67e22; color: white; padding: 0.2rem 0.7rem;
-                     border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+        <span style="background: rgba(245,158,11,0.2); color: #FCD34D; padding: 0.25rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(245,158,11,0.3);">
             {{ pending_returns|length }} Pending
         </span>
         {% endif %}
     </div>
     {% if pending_returns %}
     <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse;">
+        <table>
             <thead>
-                <tr style="background: var(--bg-color); border-bottom: 2px solid var(--border-color); text-align: left;">
-                    <th style="padding: 0.6rem;">Booking #</th>
-                    <th style="padding: 0.6rem;">Customer</th>
-                    <th style="padding: 0.6rem;">Car</th>
-                    <th style="padding: 0.6rem;">Drop Date</th>
-                    <th style="padding: 0.6rem;">Status</th>
-                    <th style="padding: 0.6rem; text-align: center;">Action</th>
+                <tr>
+                    <th>Booking #</th>
+                    <th>Customer</th>
+                    <th>Car</th>
+                    <th>Drop Date</th>
+                    <th>Status</th>
+                    <th style="text-align: center;">Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for b in pending_returns %}
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                    <td style="padding: 0.6rem;">#{{ b.id }}</td>
-                    <td style="padding: 0.6rem;">{{ b.user_name }}<br>
-                        <span style="font-size:0.8rem; color:#888;">{{ b.user_phone }}</span></td>
-                    <td style="padding: 0.6rem;">{{ b.car_name }}</td>
-                    <td style="padding: 0.6rem;">{{ b.drop_date }}</td>
-                    <td style="padding: 0.6rem;">
-                        <span style="background:#fff3cd; color:#856404; padding: 0.2rem 0.5rem;
-                                     border-radius: 4px; font-size: 0.8rem;">{{ b.status|title }}</span>
-                    </td>
-                    <td style="padding: 0.6rem; text-align: center; display: flex; gap: 0.5rem; justify-content: center;">
-                        <a href="{{ url_for('admin_verify_return', booking_id=b.id) }}"
-                           class="btn btn-primary"
-                           style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">
-                            &#10003; Verify Return
-                        </a>
-                        <a href="{{ url_for('admin_cancel_booking', booking_id=b.id) }}" 
-                           class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; background: #fff; color: #dc3545; border: 1px solid #dc3545;"
-                           onclick="return confirm('Cancel this active booking?');">
-                            Cancel
-                        </a>
+                <tr>
+                    <td>#{{ b.id }}</td>
+                    <td>{{ b.user_name }}<br><span style="font-size:0.8rem; color: var(--text-dim);">{{ b.user_phone }}</span></td>
+                    <td>{{ b.car_name }}</td>
+                    <td>{{ b.drop_date }}</td>
+                    <td><span class="badge badge-pending">{{ b.status|title }}</span></td>
+                    <td style="text-align: center;">
+                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                            <a href="{{ url_for('admin_verify_return', booking_id=b.id) }}"
+                               class="btn btn-primary"
+                               style="padding: 0.3rem 0.8rem; font-size: 0.82rem;">
+                                &#10003; Verify Return
+                            </a>
+                            <a href="{{ url_for('admin_cancel_booking', booking_id=b.id) }}"
+                               class="btn btn-danger"
+                               style="padding: 0.3rem 0.8rem; font-size: 0.82rem;"
+                               onclick="return confirm('Cancel this active booking?');">
+                                Cancel
+                            </a>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -113,47 +111,50 @@
         </table>
     </div>
     {% else %}
-    <p style="color: #28a745; font-weight: 500;">&#10003; No pending returns — all cars accounted for.</p>
+    <p style="color: var(--success); font-weight: 500;">&#10003; No pending returns — all cars accounted for.</p>
     {% endif %}
 </div>
 
 <!-- Recent Bookings -->
 <div class="card" style="margin-bottom: 2rem;">
-    <h2>Recent Bookings</h2>
+    <h2 style="margin-bottom: 1.2rem; color: var(--primary);">&#128337; Recent Bookings</h2>
     <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+        <table>
             <thead>
-                <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
-                    <th style="padding: 0.5rem;">ID</th>
-                    <th style="padding: 0.5rem;">Customer</th>
-                    <th style="padding: 0.5rem;">Car</th>
-                    <th style="padding: 0.5rem;">Dates</th>
-                    <th style="padding: 0.5rem;">Amount</th>
-                    <th style="padding: 0.5rem;">Status</th>
-                    <th style="padding: 0.5rem; text-align: center;">Actions</th>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Car</th>
+                    <th>Dates</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th style="text-align: center;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for booking in bookings %}
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                    <td style="padding: 0.5rem;">#{{ booking.id }}</td>
-                    <td style="padding: 0.5rem;">{{ booking.user_name }}</td>
-                    <td style="padding: 0.5rem;">{{ booking.car_name }}</td>
-                    <td style="padding: 0.5rem;">{{ booking.pickup_date }} to {{ booking.drop_date }}</td>
-                    <td style="padding: 0.5rem;">&#8377;{{ booking.total_amount }}</td>
-                    <td style="padding: 0.5rem;">
+                <tr>
+                    <td style="color: var(--text-dim);">#{{ booking.id }}</td>
+                    <td>{{ booking.user_name }}</td>
+                    <td>{{ booking.car_name }}</td>
+                    <td style="font-size: 0.85rem; color: var(--text-muted);">{{ booking.pickup_date }} → {{ booking.drop_date }}</td>
+                    <td style="color: var(--primary); font-weight: 600;">&#8377;{{ booking.total_amount }}</td>
+                    <td>
                         {% if booking.return_verified %}
-                        <span style="background-color: #d4edda; color: #155724; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">&#10003; Returned</span>
+                            <span class="badge badge-returned">&#10003; Returned</span>
                         {% elif booking.status == 'cancelled' %}
-                        <span style="background-color: #f8d7da; color: #721c24; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">Cancelled</span>
+                            <span class="badge badge-cancelled">Cancelled</span>
+                        {% elif booking.status == 'active' %}
+                            <span class="badge badge-active">Active</span>
                         {% else %}
-                        <span style="background-color: #e9ecef; color: #333; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">{{ booking.status|title }}</span>
+                            <span class="badge badge-pending">{{ booking.status|title }}</span>
                         {% endif %}
                     </td>
-                    <td style="padding: 0.5rem; text-align: center;">
+                    <td style="text-align: center;">
                         {% if not booking.return_verified and booking.status != 'cancelled' %}
-                        <a href="{{ url_for('admin_cancel_booking', booking_id=booking.id) }}" 
-                           class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #fff; color: #dc3545; border: 1px solid #dc3545;"
+                        <a href="{{ url_for('admin_cancel_booking', booking_id=booking.id) }}"
+                           class="btn btn-danger"
+                           style="padding: 0.2rem 0.55rem; font-size: 0.75rem;"
                            onclick="return confirm('Cancel booking #{{ booking.id }}?');">
                             Cancel
                         </a>
@@ -164,60 +165,58 @@
             </tbody>
         </table>
         {% if not bookings %}
-        <p style="text-align: center; margin-top: 1rem; color: #666;">No bookings found.</p>
+        <p style="text-align: center; margin-top: 1rem; color: var(--text-muted);">No bookings found.</p>
         {% endif %}
     </div>
 </div>
 
 <!-- Cancelled Bookings -->
-<div class="card" style="margin-bottom: 2rem; border-color: #f5c6cb; background: #fff5f5;">
-    <h2 style="color: #721c24;">&#10060; Cancelled Bookings</h2>
+<div class="card" style="margin-bottom: 2rem; border-color: rgba(244,63,94,0.25);">
+    <h2 style="margin-bottom: 1.2rem; color: var(--error);">&#10060; Cancelled Bookings</h2>
     <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+        <table>
             <thead>
-                <tr style="border-bottom: 2px solid #f5c6cb; text-align: left;">
-                    <th style="padding: 0.5rem;">ID</th>
-                    <th style="padding: 0.5rem;">Customer</th>
-                    <th style="padding: 0.5rem;">Car</th>
-                    <th style="padding: 0.5rem;">Dates</th>
-                    <th style="padding: 0.5rem;">Status</th>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Car</th>
+                    <th>Dates</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
                 {% for b in cancelled_bookings %}
-                <tr style="border-bottom: 1px solid #f5c6cb;">
-                    <td style="padding: 0.5rem;">#{{ b.id }}</td>
-                    <td style="padding: 0.5rem;">{{ b.user_name }}</td>
-                    <td style="padding: 0.5rem;">{{ b.car_name }}</td>
-                    <td style="padding: 0.5rem;">{{ b.pickup_date }} to {{ b.drop_date }}</td>
-                    <td style="padding: 0.5rem;">
-                        <span style="background-color: #f8d7da; color: #721c24; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">Cancelled</span>
-                    </td>
+                <tr>
+                    <td>#{{ b.id }}</td>
+                    <td>{{ b.user_name }}</td>
+                    <td>{{ b.car_name }}</td>
+                    <td style="font-size: 0.85rem; color: var(--text-muted);">{{ b.pickup_date }} → {{ b.drop_date }}</td>
+                    <td><span class="badge badge-cancelled">Cancelled</span></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
         {% if not cancelled_bookings %}
-        <p style="text-align: center; margin-top: 1rem; color: #721c24;">No cancelled bookings.</p>
+        <p style="text-align: center; margin-top: 1rem; color: var(--text-muted);">No cancelled bookings.</p>
         {% endif %}
     </div>
 </div>
 
 <!-- Customer Inquiries -->
 <div class="card">
-    <h2>Customer Inquiries</h2>
-    <ul style="list-style: none; padding: 0; margin-top: 1rem;">
+    <h2 style="margin-bottom: 1.2rem; color: var(--primary);">&#128172; Customer Inquiries</h2>
+    <ul style="list-style: none; padding: 0;">
         {% for u in users %}
-        <li style="border-bottom: 1px solid var(--border-color); padding: 0.75rem 0; display: flex; justify-content: space-between; align-items: center;">
+        <li style="border-bottom: 1px solid var(--glass-border); padding: 0.85rem 0; display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <strong>{{ u.name }}</strong>
-                <br><span style="font-size: 0.85rem; color: #666;">{{ u.email }} &bull; {{ u.phone }}</span>
+                <strong style="color: var(--text);">{{ u.name }}</strong>
+                <br><span style="font-size: 0.85rem; color: var(--text-muted);">{{ u.email }} &bull; {{ u.phone }}</span>
             </div>
-            <a href="{{ url_for('admin_chat', user_id=u.id) }}" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">View Chat</a>
+            <a href="{{ url_for('admin_chat', user_id=u.id) }}" class="btn btn-outline" style="padding: 0.3rem 0.7rem; font-size: 0.85rem;">View Chat</a>
         </li>
         {% endfor %}
         {% if not users %}
-        <li style="color: #666; padding: 1rem 0;">No registered customers yet.</li>
+        <li style="color: var(--text-muted); padding: 1.5rem 0; text-align: center;">No registered customers yet.</li>
         {% endif %}
     </ul>
 </div>

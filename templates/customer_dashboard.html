@@ -2,38 +2,46 @@
 {% block title %}My Dashboard - Pablo's Rentals{% endblock %}
 
 {% block content %}
-<div style="margin-top: 2rem;">
-    <h1>Welcome, {{ g.user.name }}</h1>
-    <p>Manage your bookings and inquiries below.</p>
+<div style="margin-top: 2rem; margin-bottom: 2rem;">
+    <h1>Welcome, <span style="color: var(--primary);">{{ g.user.name }}</span></h1>
+    <p>Manage your bookings below. Use the chat widget in the corner to reach support.</p>
 </div>
 
-<div style="margin-top: 2rem;">
-    <h2>Your Bookings</h2>
-    {% if bookings %}
-        {% for booking in bookings %}
-        <div class="card" style="margin-bottom: 1rem; max-width: 800px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <h3>{{ booking.car_name }}</h3>
-                <span style="background-color: #e9ecef; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">Status: {{ booking.status|title }}</span>
-            </div>
-            <p><strong>Dates:</strong> {{ booking.pickup_date }} to {{ booking.drop_date }} ({{ booking.total_days }} days)</p>
-            <p><strong>Total Amount:</strong> ₹{{ booking.total_amount }}</p>
-            
-            {% if booking.status not in ['returned', 'cancelled'] %}
-            <div style="margin-top: 0.8rem; border-top: 1px solid #eee; padding-top: 0.8rem;">
-                <a href="{{ url_for('cancel_booking', booking_id=booking.id) }}" 
-                   class="btn" style="background: #fff; color: #dc3545; border: 1px solid #dc3545; padding: 0.2rem 0.6rem; font-size: 0.8rem;"
-                   onclick="return confirm('Are you sure you want to cancel this booking?');">
-                    Cancel Booking
-                </a>
-            </div>
+<h2 class="section-title" style="text-align: left;">Your Bookings</h2>
+{% if bookings %}
+    {% for booking in bookings %}
+    <div class="card" style="max-width: 860px; margin-bottom: 1.2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h3 style="color: var(--text);">{{ booking.car_name }}</h3>
+            {% if booking.return_verified %}
+                <span class="badge badge-returned">&#10003; Returned</span>
+            {% elif booking.status == 'cancelled' %}
+                <span class="badge badge-cancelled">Cancelled</span>
+            {% elif booking.status == 'active' %}
+                <span class="badge badge-active">Active</span>
+            {% else %}
+                <span class="badge badge-pending">{{ booking.status|title }}</span>
             {% endif %}
         </div>
-        {% endfor %}
-    {% else %}
-        <div class="card" style="max-width: 800px;">
-            <p>You have no bookings yet. <a href="{{ url_for('index') }}">Browse our fleet</a>.</p>
+        <p><strong style="color: var(--text-muted);">Dates:</strong> {{ booking.pickup_date }} → {{ booking.drop_date }} <span style="color: var(--text-dim); font-size:0.85rem;">({{ booking.total_days }} days)</span></p>
+        <p style="margin-top: 0.4rem;"><strong style="color: var(--text-muted);">Total Amount:</strong> <span style="color: var(--primary); font-weight: 700; font-size: 1.1rem;">₹{{ booking.total_amount }}</span></p>
+
+        {% if booking.status not in ['returned', 'cancelled'] %}
+        <div style="margin-top: 1rem; border-top: 1px solid var(--glass-border); padding-top: 0.8rem;">
+            <a href="{{ url_for('cancel_booking', booking_id=booking.id) }}"
+               class="btn btn-danger"
+               style="padding: 0.25rem 0.75rem; font-size: 0.8rem;"
+               onclick="return confirm('Are you sure you want to cancel this booking?');">
+                &#10005; Cancel Booking
+            </a>
         </div>
-    {% endif %}
-</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card" style="max-width: 860px; text-align: center; padding: 3rem;">
+        <p style="font-size: 1.1rem; margin-bottom: 1.5rem;">You have no bookings yet.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Browse Our Fleet</a>
+    </div>
+{% endif %}
 {% endblock %}
