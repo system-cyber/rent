@@ -459,8 +459,9 @@ def admin_offline_booking():
         user = g.db.execute('SELECT id FROM users WHERE phone = ?', (cust_phone,)).fetchone()
         if not user:
             # Create a simple placeholder user
-            g.db.execute('INSERT INTO users (username, password, name, phone, role) VALUES (?, ?, ?, ?, ?)',
-                         (f"guest_{cust_phone}", "offline", cust_name, cust_phone, "customer"))
+            dummy_email = f"guest_{cust_phone}@offline.local"
+            g.db.execute('INSERT INTO users (username, password, name, email, phone, role) VALUES (?, ?, ?, ?, ?, ?)',
+                         (f"guest_{cust_phone}", "offline", cust_name, dummy_email, cust_phone, "customer"))
             user_id = g.db.execute('SELECT last_insert_rowid()').fetchone()[0]
         else:
             user_id = user['id']
