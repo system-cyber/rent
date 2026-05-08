@@ -66,7 +66,13 @@ def teardown_request(exception):
 @app.route('/')
 def index():
     cars = g.db.execute('SELECT * FROM cars').fetchall()
-    return render_template('index.html', cars=cars)
+    reviews = g.db.execute('''
+        SELECT r.*, u.name as reviewer_name 
+        FROM reviews r
+        JOIN users u ON r.user_id = u.id
+        ORDER BY r.timestamp DESC LIMIT 6
+    ''').fetchall()
+    return render_template('index.html', cars=cars, reviews=reviews)
 
 @app.route('/car/<int:car_id>')
 def car_details(car_id):
@@ -293,6 +299,50 @@ def api_chat_send():
     g.db.execute('''
         INSERT INTO messages (user_id, content, sender, timestamp) VALUES (?, ?, ?, ?)
     ''', (target_user_id, content, sender, get_corrected_time_str()))
+    g.db.commit()
+    
+    return jsonify({'success': True})
+
+# --- Reviews API ---
+@app.route('/api/reviews/add', methods=['POST'])
+def api_reviews_add():
+    data = request.json
+    rating = int(data.get('rating', 5))
+    content = data.get('content', '').strip()
+    
+    if not content:
+        return jsonify({'success': False, 'error': 'Review content cannot be empty'}), 400
+        
+    user_id = None
+    if g.user:
+        user_id = g.user['id']
+    elif 'guest_id' in session:
+        user_id = session['guest_id']
+    else:
+        # Create guest user for review
+        name = data.get('name', '').strip()
+        phone = data.get('phone', '').strip()
+        
+        if not name or not phone:
+            return jsonify({'success': False, 'error': 'Name and phone are required for guests'}), 400
+            
+        user = g.db.execute('SELECT id FROM users WHERE phone = ?', (phone,)).fetchone()
+        if not user:
+            import time
+            unique_suffix = str(int(time.time()))
+            guest_username = f"guest_{phone}_{unique_suffix}"
+            dummy_email = f"guest_{phone}@review.local"
+            g.db.execute('INSERT INTO users (username, password, name, email, phone, role) VALUES (?, ?, ?, ?, ?, ?)',
+                         (guest_username, "offline", name, dummy_email, phone, "customer"))
+            user_id = g.db.execute('SELECT last_insert_rowid()').fetchone()[0]
+            g.db.commit()
+        else:
+            user_id = user['id']
+        session['guest_id'] = user_id
+        
+    g.db.execute('''
+        INSERT INTO reviews (user_id, rating, content) VALUES (?, ?, ?)
+    ''', (user_id, rating, content))
     g.db.commit()
     
     return jsonify({'success': True})

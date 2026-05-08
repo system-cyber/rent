@@ -88,6 +88,18 @@ def init_db():
         )
     ''')
 
+    # Reviews Table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS reviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            rating INTEGER NOT NULL,
+            content TEXT NOT NULL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+    ''')
+
     # ─── Migrations: add new columns if they don't already exist ────────────
     existing_car_cols = {row[1] for row in c.execute("PRAGMA table_info(cars)")}
     for col in ['image_front', 'image_back', 'image_right', 'image_left']:
@@ -138,6 +150,44 @@ def init_db():
             "INSERT INTO cars (name, daily_rate, monthly_rate, extra_km_rate, image1, image2, quantity, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             initial_cars
         )
+
+    # Insert initial reviews if none exist
+    c.execute("SELECT count(*) FROM reviews")
+    if c.fetchone()[0] == 0:
+        import random
+        from werkzeug.security import generate_password_hash
+        
+        # Create 6 dummy reviewers
+        reviewers = [
+            ("Rajesh Kumar", "rajesh@example.com", "9876543211"),
+            ("Priya Sharma", "priya@example.com", "9876543212"),
+            ("Arun Prakash", "arun@example.com", "9876543213"),
+            ("Meera Nair", "meera@example.com", "9876543214"),
+            ("Vikram Singh", "vikram@example.com", "9876543215"),
+            ("Neha Gupta", "neha@example.com", "9876543216")
+        ]
+        
+        user_ids = []
+        for r_name, r_email, r_phone in reviewers:
+            c.execute("SELECT id FROM users WHERE email = ?", (r_email,))
+            u = c.fetchone()
+            if not u:
+                c.execute("INSERT INTO users (role, name, email, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)",
+                          ('customer', r_name, r_email, r_phone, r_email, generate_password_hash('pass')))
+                user_ids.append(c.lastrowid)
+            else:
+                user_ids.append(u['id'])
+                
+        reviews_data = [
+            (user_ids[0], 5, "Excellent service! The car was perfectly clean and the drop-off was right on time. Highly recommended for airport transfers."),
+            (user_ids[1], 5, "I rented the Innova for a family trip. The rate was very reasonable and the car condition was superb. Will book again!"),
+            (user_ids[2], 4, "Smooth booking process and great customer support. The live chat feature helped me clear my doubts instantly."),
+            (user_ids[3], 5, "Very professional behavior. They delivered the car to my site without any hassle. The vehicle was well sanitized."),
+            (user_ids[4], 5, "Hands down the best car rental experience I've had. No hidden charges, transparent pricing, and wonderful cars."),
+            (user_ids[5], 4, "Good experience overall. The car drove perfectly. The only thing was a slight delay in pickup, but the admin compensated for it.")
+        ]
+        
+        c.executemany("INSERT INTO reviews (user_id, rating, content) VALUES (?, ?, ?)", reviews_data)
 
     conn.commit()
     conn.close()

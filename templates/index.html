@@ -56,5 +56,117 @@
         <a href="{{ url_for('book', car_id=car.id) }}" class="btn btn-primary" style="display: block;">Book Now</a>
     </div>
     {% endfor %}
+    {% endfor %}
 </div>
+
+<h2 style="margin-top: 4rem; margin-bottom: 1.5rem; text-align: center;">Customer Testimonials</h2>
+<div class="reviews-section" style="margin-bottom: 3rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <button id="open-review-modal" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.6rem 1.5rem;">&#9997; Write a Review</button>
+    </div>
+    <div class="grid">
+        {% for review in reviews %}
+        <div class="card review-card" style="padding: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <h4 style="margin: 0; color: var(--primary-color);">{{ review.reviewer_name }}</h4>
+                <div class="stars" style="color: #FFD700; font-size: 1.2rem;">
+                    {% for _ in range(review.rating) %}&#9733;{% endfor %}{% for _ in range(5 - review.rating) %}&#9734;{% endfor %}
+                </div>
+            </div>
+            <p style="font-size: 0.85rem; color: #999; margin-bottom: 1rem;">{{ review.timestamp.split(' ')[0] }}</p>
+            <p style="color: #555; font-style: italic;">"{{ review.content }}"</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Write Review Modal -->
+<div id="review-modal" class="modal">
+    <div class="modal-content card" style="max-width: 500px; margin: 5rem auto; padding: 2rem;">
+        <span id="close-review-modal" style="float: right; font-size: 1.5rem; cursor: pointer;">&times;</span>
+        <h2>Write a Review</h2>
+        <div id="review-form-container" style="margin-top: 1rem;">
+            {% if not g.user and not session.get('guest_id') %}
+            <div class="form-group">
+                <label for="review-name">Name</label>
+                <input type="text" id="review-name" class="form-control" placeholder="Your Name" required>
+            </div>
+            <div class="form-group">
+                <label for="review-phone">Phone Number</label>
+                <input type="tel" id="review-phone" class="form-control" placeholder="Your Phone Number" required>
+            </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="review-rating">Rating</label>
+                <select id="review-rating" class="form-control" required>
+                    <option value="5">5 - Excellent &#9733;&#9733;&#9733;&#9733;&#9733;</option>
+                    <option value="4">4 - Very Good &#9733;&#9733;&#9733;&#9733;&#9734;</option>
+                    <option value="3">3 - Good &#9733;&#9733;&#9733;&#9734;&#9734;</option>
+                    <option value="2">2 - Fair &#9733;&#9733;&#9734;&#9734;&#9734;</option>
+                    <option value="1">1 - Poor &#9733;&#9734;&#9734;&#9734;&#9734;</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="review-content">Your Review</label>
+                <textarea id="review-content" class="form-control" rows="4" placeholder="Tell us about your experience..." required></textarea>
+            </div>
+            
+            <button id="submit-review-btn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit Review</button>
+        </div>
+        <div id="review-success-msg" style="display: none; text-align: center; color: #28a745; margin-top: 2rem;">
+            <h3>&#10003; Thank you!</h3>
+            <p>Your review has been successfully submitted.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const reviewModal = document.getElementById('review-modal');
+    const openBtn = document.getElementById('open-review-modal');
+    const closeBtn = document.getElementById('close-review-modal');
+    
+    openBtn.onclick = () => reviewModal.style.display = 'block';
+    closeBtn.onclick = () => reviewModal.style.display = 'none';
+    window.onclick = (e) => {
+        if (e.target == reviewModal) reviewModal.style.display = 'none';
+    };
+    
+    document.getElementById('submit-review-btn').addEventListener('click', () => {
+        const rating = document.getElementById('review-rating').value;
+        const content = document.getElementById('review-content').value;
+        
+        let payload = { rating, content };
+        
+        {% if not g.user and not session.get('guest_id') %}
+        const name = document.getElementById('review-name').value;
+        const phone = document.getElementById('review-phone').value;
+        if (!name || !phone) { alert("Name and Phone are required!"); return; }
+        payload.name = name;
+        payload.phone = phone;
+        {% endif %}
+        
+        if (!content) { alert("Review content is required!"); return; }
+        
+        document.getElementById('submit-review-btn').innerText = 'Submitting...';
+        
+        fetch('/api/reviews/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(res => res.json()).then(data => {
+            if(data.success) {
+                document.getElementById('review-form-container').style.display = 'none';
+                document.getElementById('review-success-msg').style.display = 'block';
+                setTimeout(() => window.location.reload(), 2000);
+            } else {
+                alert(data.error);
+                document.getElementById('submit-review-btn').innerText = 'Submit Review';
+            }
+        });
+    });
+</script>
 {% endblock %}
