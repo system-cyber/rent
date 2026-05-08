@@ -3,9 +3,49 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from database import get_db_connection
 from datetime import datetime
 import os, uuid, base64
+import socket, struct, time, threading
+
+ntp_offset = 0.0
+
+def sync_ntp():
+    global ntp_offset
+    server = 'time.windows.com'
+    port = 123
+    
+    while True:
+        try:
+            client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            client.settimeout(5.0)
+            data = b'\x1b' + 47 * b'\0'
+            t1 = time.time()
+            client.sendto(data, (server, port))
+            data, address = client.recvfrom(1024)
+            t2 = time.time()
+            
+            if data:
+                s = struct.unpack('!12I', data)
+                # NTP timestamp is seconds since 1900-01-01
+                # Unix timestamp is seconds since 1970-01-01
+                # Difference is 2208988800 seconds
+                ntp_time = s[10] + float(s[11]) / 2**32 - 2208988800
+                network_delay = (t2 - t1) / 2
+                ntp_offset = (ntp_time - network_delay) - time.time()
+        except Exception as e:
+            print(f"NTP sync failed: {e}")
+        
+        # Interval: 1 minute
+        time.sleep(60)
+
+ntp_thread = threading.Thread(target=sync_ntp, daemon=True)
+ntp_thread.start()
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_pablo_key'
+
+@app.route('/api/time')
+def api_time():
+    # Return the current correct time in seconds since epoch
+    return jsonify({'correct_time_ms': (time.time() + ntp_offset) * 1000})
 
 @app.before_request
 def before_request():
