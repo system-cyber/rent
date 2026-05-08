@@ -101,15 +101,29 @@ def customer_dashboard():
 
 @app.route('/book/<int:car_id>', methods=['GET', 'POST'])
 def book(car_id):
-    if not g.user:
-        flash('Please login to book a car.', 'info')
-        return redirect(url_for('login'))
-        
     car = g.db.execute('SELECT * FROM cars WHERE id = ?', (car_id,)).fetchone()
     
     if request.method == 'POST':
         pickup_date = request.form['pickup_date']
         drop_date = request.form['drop_date']
+        
+        if not g.user:
+            cust_name = request.form.get('name', '').strip()
+            cust_email = request.form.get('email', '').strip()
+            cust_phone = request.form.get('phone', '').strip()
+            
+            user = g.db.execute('SELECT id FROM users WHERE phone = ? OR email = ?', (cust_phone, cust_email)).fetchone()
+            if not user:
+                import time
+                unique_suffix = str(int(time.time()))
+                guest_username = f"guest_{cust_phone}_{unique_suffix}"
+                g.db.execute('INSERT INTO users (username, password, name, email, phone, role) VALUES (?, ?, ?, ?, ?, ?)',
+                             (guest_username, "offline", cust_name, cust_email, cust_phone, "customer"))
+                user_id = g.db.execute('SELECT last_insert_rowid()').fetchone()[0]
+            else:
+                user_id = user['id']
+        else:
+            user_id = g.user['id']
         
         # Calculate days
         pickup = datetime.strptime(pickup_date, '%Y-%m-%d')
@@ -127,10 +141,12 @@ def book(car_id):
         g.db.execute('''
             INSERT INTO bookings (user_id, car_id, pickup_date, drop_date, total_days, total_amount)
             VALUES (?, ?, ?, ?, ?, ?)
-        ''', (g.user['id'], car_id, pickup_date, drop_date, days, total_amount))
+        ''', (user_id, car_id, pickup_date, drop_date, days, total_amount))
         g.db.commit()
         
         flash('Booking placed successfully! Pay the advance via UPI to confirm.', 'success')
+        if not g.user:
+            return redirect(url_for('index'))
         return redirect(url_for('customer_dashboard'))
         
     return render_template('book.html', car=car)
