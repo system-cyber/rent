@@ -95,11 +95,16 @@
                         <span style="background:#fff3cd; color:#856404; padding: 0.2rem 0.5rem;
                                      border-radius: 4px; font-size: 0.8rem;">{{ b.status|title }}</span>
                     </td>
-                    <td style="padding: 0.6rem; text-align: center;">
+                    <td style="padding: 0.6rem; text-align: center; display: flex; gap: 0.5rem; justify-content: center;">
                         <a href="{{ url_for('admin_verify_return', booking_id=b.id) }}"
                            class="btn btn-primary"
                            style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">
                             &#10003; Verify Return
+                        </a>
+                        <a href="{{ url_for('admin_cancel_booking', booking_id=b.id) }}" 
+                           class="btn" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; background: #fff; color: #dc3545; border: 1px solid #dc3545;"
+                           onclick="return confirm('Cancel this active booking?');">
+                            Cancel
                         </a>
                     </td>
                 </tr>
@@ -147,12 +152,11 @@
                     </td>
                     <td style="padding: 0.5rem; text-align: center;">
                         {% if not booking.return_verified and booking.status != 'cancelled' %}
-                        <form action="{{ url_for('admin_cancel_booking', booking_id=booking.id) }}" method="POST" 
-                              style="display: inline;" onsubmit="return confirm('Cancel booking #{{ booking.id }}?');">
-                            <button type="submit" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #fff; color: #dc3545; border: 1px solid #dc3545;">
-                                Cancel
-                            </button>
-                        </form>
+                        <a href="{{ url_for('admin_cancel_booking', booking_id=booking.id) }}" 
+                           class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #fff; color: #dc3545; border: 1px solid #dc3545;"
+                           onclick="return confirm('Cancel booking #{{ booking.id }}?');">
+                            Cancel
+                        </a>
                         {% endif %}
                     </td>
                 </tr>
@@ -161,6 +165,40 @@
         </table>
         {% if not bookings %}
         <p style="text-align: center; margin-top: 1rem; color: #666;">No bookings found.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Cancelled Bookings -->
+<div class="card" style="margin-bottom: 2rem; border-color: #f5c6cb; background: #fff5f5;">
+    <h2 style="color: #721c24;">&#10060; Cancelled Bookings</h2>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="border-bottom: 2px solid #f5c6cb; text-align: left;">
+                    <th style="padding: 0.5rem;">ID</th>
+                    <th style="padding: 0.5rem;">Customer</th>
+                    <th style="padding: 0.5rem;">Car</th>
+                    <th style="padding: 0.5rem;">Dates</th>
+                    <th style="padding: 0.5rem;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in cancelled_bookings %}
+                <tr style="border-bottom: 1px solid #f5c6cb;">
+                    <td style="padding: 0.5rem;">#{{ b.id }}</td>
+                    <td style="padding: 0.5rem;">{{ b.user_name }}</td>
+                    <td style="padding: 0.5rem;">{{ b.car_name }}</td>
+                    <td style="padding: 0.5rem;">{{ b.pickup_date }} to {{ b.drop_date }}</td>
+                    <td style="padding: 0.5rem;">
+                        <span style="background-color: #f8d7da; color: #721c24; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">Cancelled</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if not cancelled_bookings %}
+        <p style="text-align: center; margin-top: 1rem; color: #721c24;">No cancelled bookings.</p>
         {% endif %}
     </div>
 </div>

@@ -23,12 +23,11 @@
                 
                 {% if booking.status not in ['returned', 'cancelled'] %}
                 <div style="margin-top: 0.8rem; border-top: 1px solid #eee; padding-top: 0.8rem;">
-                    <form action="{{ url_for('cancel_booking', booking_id=booking.id) }}" method="POST" 
-                          onsubmit="return confirm('Are you sure you want to cancel this booking?');">
-                        <button type="submit" class="btn" style="background: #fff; color: #dc3545; border: 1px solid #dc3545; padding: 0.2rem 0.6rem; font-size: 0.8rem;">
-                            Cancel Booking
-                        </button>
-                    </form>
+                    <a href="{{ url_for('cancel_booking', booking_id=booking.id) }}" 
+                       class="btn" style="background: #fff; color: #dc3545; border: 1px solid #dc3545; padding: 0.2rem 0.6rem; font-size: 0.8rem;"
+                       onclick="return confirm('Are you sure you want to cancel this booking?');">
+                        Cancel Booking
+                    </a>
                 </div>
                 {% endif %}
             </div>

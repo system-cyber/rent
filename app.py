@@ -168,6 +168,16 @@ def admin_dashboard():
         FROM bookings b 
         JOIN cars c ON b.car_id = c.id 
         JOIN users u ON b.user_id = u.id
+        WHERE b.status != 'cancelled'
+        ORDER BY b.created_at DESC
+    ''').fetchall()
+
+    cancelled_bookings = g.db.execute('''
+        SELECT b.*, c.name as car_name, u.name as user_name 
+        FROM bookings b 
+        JOIN cars c ON b.car_id = c.id 
+        JOIN users u ON b.user_id = u.id
+        WHERE b.status = 'cancelled'
         ORDER BY b.created_at DESC
     ''').fetchall()
 
@@ -177,12 +187,13 @@ def admin_dashboard():
         FROM bookings b
         JOIN cars c ON b.car_id = c.id
         JOIN users u ON b.user_id = u.id
-        WHERE b.return_verified = 0 AND b.status != 'returned'
+        WHERE b.return_verified = 0 AND b.status = 'confirmed'
         ORDER BY b.drop_date ASC
     ''').fetchall()
     
     return render_template('admin_dashboard.html', cars=cars, bookings=bookings,
-                           users=users, pending_returns=pending_returns)
+                           users=users, pending_returns=pending_returns,
+                           cancelled_bookings=cancelled_bookings)
 
 @app.route('/admin/car/add', methods=['GET', 'POST'])
 def admin_add_car():
@@ -416,38 +427,44 @@ def admin_offline_booking():
     return render_template('admin_offline_booking.html', cars=cars)
 
 
-@app.route('/booking/cancel/<int:booking_id>', methods=['POST'])
+@app.route('/booking/cancel/<int:booking_id>', methods=['GET', 'POST'])
 def cancel_booking(booking_id):
     if not g.user:
         return redirect(url_for('login'))
     
-    # Ensure the booking belongs to this user and is not already returned or cancelled
+    print(f"DEBUG: Customer {g.user['id']} attempting to cancel booking {booking_id}")
     booking = g.db.execute('SELECT * FROM bookings WHERE id = ? AND user_id = ?', 
                            (booking_id, g.user['id'])).fetchone()
     
     if not booking:
+        print(f"DEBUG: Booking {booking_id} not found for user {g.user['id']}")
         flash('Booking not found or access denied.', 'error')
     elif booking['status'] in ['returned', 'cancelled']:
+        print(f"DEBUG: Booking {booking_id} status is {booking['status']}, cannot cancel")
         flash('This booking cannot be cancelled.', 'error')
     else:
         g.db.execute("UPDATE bookings SET status = 'cancelled' WHERE id = ?", (booking_id,))
         g.db.commit()
+        print(f"DEBUG: Booking {booking_id} cancelled successfully")
         flash('Booking cancelled successfully.', 'success')
     
     return redirect(url_for('customer_dashboard'))
 
 
-@app.route('/admin/booking/cancel/<int:booking_id>', methods=['POST'])
+@app.route('/admin/booking/cancel/<int:booking_id>', methods=['GET', 'POST'])
 def admin_cancel_booking(booking_id):
     if not g.user or g.user['role'] != 'admin':
         return redirect(url_for('login'))
     
+    print(f"DEBUG: Admin attempting to cancel booking {booking_id}")
     booking = g.db.execute('SELECT * FROM bookings WHERE id = ?', (booking_id,)).fetchone()
     if not booking:
+        print(f"DEBUG: Booking {booking_id} not found")
         flash('Booking not found.', 'error')
     else:
         g.db.execute("UPDATE bookings SET status = 'cancelled' WHERE id = ?", (booking_id,))
         g.db.commit()
+        print(f"DEBUG: Booking {booking_id} cancelled by admin")
         flash(f'Booking #{booking_id} has been cancelled by Admin.', 'success')
     
     return redirect(url_for('admin_dashboard'))
