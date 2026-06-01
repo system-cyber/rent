@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Pablo's Rentals{% endblock %}</title>
+    <title>{% block title %}Pablo's Garage{% endblock %}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
     <nav class="navbar">
-        <a href="{{ url_for('index') }}" class="nav-brand">Pablo's Rentals</a>
+        <a href="{{ url_for('index') }}" class="nav-brand">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="PG Logo" style="height: 38px; vertical-align: middle;">
+            Pablo's Garage
+        </a>
         <div class="nav-links">
             <a href="{{ url_for('index') }}">Home</a>
             {% if g.user %}
@@ -40,7 +43,7 @@
     </div>
 
     <footer>
-        <p>&copy; 2022 - 2026 Pablo's Rentals. All rights reserved.</p>
+        <p>&copy; 2022 - 2026 Pablo's Garage. All rights reserved.</p>
         <p>Contact: <a href="https://wa.me/917025328233" style="color:#25D366;">WhatsApp (+91 7025328233)</a></p>
     </footer>
     {% if not (g.user and g.user.role == 'admin') %}
