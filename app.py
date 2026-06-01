@@ -42,6 +42,9 @@ ntp_thread.start()
 app = Flask(__name__)
 app.secret_key = 'super_secret_pablo_key'
 
+from database import init_db
+init_db()
+
 @app.route('/api/time')
 def api_time():
     # Return the current correct time in seconds since epoch
